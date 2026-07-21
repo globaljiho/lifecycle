@@ -130,6 +130,24 @@
             cursor: pointer;
         }
 
+        /* 외벌이 경고 메시지 영역 강조 */
+        #singleIncomeWarning {
+            display: block;
+            background: #111;
+            color: #ff8a80;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 15px;
+            line-height: 1.6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        #singleIncomeWarning strong {
+            color: #fff;
+            font-size: 17px;
+        }
+
         /* 배우자 소득 입력 영역 강조 */
         #spouseIncomeGroup {
             display: none;
@@ -216,6 +234,13 @@
             </div>
         </div>
 
+        <!-- 외벌이 경고 메시지 (외벌이 선택 시 노출) -->
+        <div id="singleIncomeWarning">
+            ⚠️ <strong>경고: 유가족 대체 소득 '0원'</strong><br>
+            가장 유고 시 매월 들어오던 소득이 완전히 끊깁니다.<br>
+            오직 <strong>'남겨진 재산'</strong>만으로 아래의 막대한 생존 비용을 모두 감당해야 합니다.
+        </div>
+
         <!-- 배우자 소득 입력 (맞벌이 선택 시 노출) -->
         <div class="input-group" id="spouseIncomeGroup">
             <label>가장 유고 시, 남겨진 배우자가 당장 벌어올 수 있는 '현실적인' 월 소득 (만 원)</label>
@@ -241,7 +266,7 @@
         <button type="button" class="add-banner" onclick="addChild()">+ 부양해야 할 자녀 추가</button>
 
         <div class="input-group">
-            <label>가족이 버텨내야 할 최소 월 생계 유지비 (만 원)</label>
+            <label>소득 단절 상태에서 가족이 버텨내야 할 최소 월 생계비 (만 원)</label>
             <input type="number" id="monthlyExpense" value="300" min="0">
         </div>
         <div class="input-group">
@@ -249,7 +274,7 @@
             <input type="number" id="lumpSum" value="5000" min="0">
         </div>
         <div class="input-group">
-            <label>현재 기 확보된 생존 방어 자산 (만 원)</label>
+            <label>가장 유고 시 유가족에게 온전히 전달되는 '남겨진 재산' (만 원)</label>
             <input type="number" id="currentAssets" value="3000" min="0">
         </div>
 
@@ -274,6 +299,7 @@
         function toggleSpouseIncome() {
             const isDual = document.querySelector('input[name="incomeType"][value="dual"]').checked;
             document.getElementById('spouseIncomeGroup').style.display = isDual ? 'block' : 'none';
+            document.getElementById('singleIncomeWarning').style.display = isDual ? 'none' : 'block';
             if (!isDual) {
                 document.getElementById('spouseIncome').value = '0';
             }
