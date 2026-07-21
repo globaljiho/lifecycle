@@ -90,7 +90,7 @@
         }
 
         .input-group { 
-            margin-bottom: 15px; 
+            margin-bottom: 20px; 
         }
         .input-group:last-child {
             margin-bottom: 0;
@@ -109,6 +109,37 @@
             box-sizing: border-box; 
             font-size: 16px; 
         }
+        
+        /* 라디오 버튼 스타일 */
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 5px;
+        }
+        .radio-group label {
+            font-weight: normal;
+            display: inline-flex;
+            align-items: center;
+            cursor: pointer;
+            color: #333;
+        }
+        .radio-group input[type="radio"] {
+            margin-right: 8px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        /* 배우자 소득 입력 영역 강조 */
+        #spouseIncomeGroup {
+            display: none;
+            background: #fff8f8;
+            padding: 15px;
+            border-left: 4px solid #d32f2f;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
         .calc-btn { 
             width: 100%; 
             padding: 15px; 
@@ -170,6 +201,27 @@
         <h2>유가족 생존 자금 냉혹 진단</h2>
         <p class="desc">당신의 부재는 곧 남겨진 가족의 생존 위기입니다.<br>막연한 낙관을 버리고 현실적인 유가족 생존 자금을 직시하십시오.</p>
 
+        <!-- 소득 구조 선택 -->
+        <div class="input-group">
+            <label>현재 가계의 소득 구조를 명확히 하십시오.</label>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="incomeType" value="single" checked onchange="toggleSpouseIncome()"> 
+                    외벌이 (가장 단독 소득)
+                </label>
+                <label>
+                    <input type="radio" name="incomeType" value="dual" onchange="toggleSpouseIncome()"> 
+                    맞벌이 (배우자 소득 있음)
+                </label>
+            </div>
+        </div>
+
+        <!-- 배우자 소득 입력 (맞벌이 선택 시 노출) -->
+        <div class="input-group" id="spouseIncomeGroup">
+            <label>가장 유고 시, 남겨진 배우자가 당장 벌어올 수 있는 '현실적인' 월 소득 (만 원)</label>
+            <input type="number" id="spouseIncome" value="0" min="0">
+        </div>
+
         <!-- 자녀 입력 영역 -->
         <div id="childrenContainer">
             <div class="child-group">
@@ -189,7 +241,7 @@
         <button type="button" class="add-banner" onclick="addChild()">+ 부양해야 할 자녀 추가</button>
 
         <div class="input-group">
-            <label>가장 유고 시 유가족이 버텨내야 할 최소 월 생계 유지비 (만 원)</label>
+            <label>가족이 버텨내야 할 최소 월 생계 유지비 (만 원)</label>
             <input type="number" id="monthlyExpense" value="300" min="0">
         </div>
         <div class="input-group">
@@ -205,6 +257,7 @@
 
         <div class="result-box" id="resultBox">
             <div class="result-item">최장 부양 기간: <span id="maxYearsLeft">0 년</span></div>
+            <div class="result-item">실질 필요 월 생계비 (배우자 소득 차감): <span id="netMonthlyInfo">0 만원</span></div>
             <div class="result-item">필요 생계비 누계: <span id="totalLiving">0 만원</span></div>
             <div class="result-item">일시 상환 채무 및 교육비: <span id="totalLumpSum">0 만원</span></div>
             <div class="result-item">총 필요 생존 자금: <span id="totalNeed">0 만원</span></div>
@@ -217,6 +270,14 @@
 
     <script>
         let childCount = 1;
+
+        function toggleSpouseIncome() {
+            const isDual = document.querySelector('input[name="incomeType"][value="dual"]').checked;
+            document.getElementById('spouseIncomeGroup').style.display = isDual ? 'block' : 'none';
+            if (!isDual) {
+                document.getElementById('spouseIncome').value = '0';
+            }
+        }
 
         function addChild() {
             childCount++;
@@ -244,7 +305,6 @@
             const targetInputs = document.querySelectorAll('.targetAge');
             let maxYearsLeft = 0;
 
-            // 여러 자녀 중 가장 긴 부양 기간(자립 연령 - 현재 나이)을 계산
             for (let i = 0; i < ageInputs.length; i++) {
                 const age = parseInt(ageInputs[i].value) || 0;
                 const target = parseInt(targetInputs[i].value) || 0;
@@ -261,16 +321,23 @@
             }
 
             const monthlyExpense = parseInt(document.getElementById('monthlyExpense').value) || 0;
+            const isDual = document.querySelector('input[name="incomeType"][value="dual"]').checked;
+            const spouseIncome = isDual ? (parseInt(document.getElementById('spouseIncome').value) || 0) : 0;
+            
+            let netMonthlyExpense = monthlyExpense - spouseIncome;
+            if (netMonthlyExpense < 0) netMonthlyExpense = 0;
+
             const lumpSum = parseInt(document.getElementById('lumpSum').value) || 0;
             const currentAssets = parseInt(document.getElementById('currentAssets').value) || 0;
 
-            const totalLivingExpense = maxYearsLeft * 12 * monthlyExpense;
+            const totalLivingExpense = maxYearsLeft * 12 * netMonthlyExpense;
             const totalNeed = totalLivingExpense + lumpSum;
             let totalDeficit = totalNeed - currentAssets;
             
             if (totalDeficit < 0) totalDeficit = 0;
 
             document.getElementById('maxYearsLeft').innerText = maxYearsLeft + ' 년';
+            document.getElementById('netMonthlyInfo').innerText = netMonthlyExpense.toLocaleString() + ' 만원';
             document.getElementById('totalLiving').innerText = totalLivingExpense.toLocaleString() + ' 만원';
             document.getElementById('totalLumpSum').innerText = lumpSum.toLocaleString() + ' 만원';
             document.getElementById('totalNeed').innerText = totalNeed.toLocaleString() + ' 만원';
