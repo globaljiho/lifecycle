@@ -34,8 +34,8 @@
             word-break: keep-all;
         }
         
-        /* 자녀 입력 그룹 스타일 */
-        .child-group {
+        /* 공통 박스 그룹 스타일 */
+        .box-group {
             background: #fdfdfd;
             border: 1px solid #ddd;
             padding: 15px;
@@ -43,7 +43,7 @@
             border-radius: 4px;
             position: relative;
         }
-        .child-title {
+        .box-title {
             margin-top: 0;
             margin-bottom: 15px;
             font-size: 16px;
@@ -100,6 +100,14 @@
             font-weight: bold; 
             margin-bottom: 8px; 
             color: #111; 
+        }
+        .label-desc {
+            font-size: 13px;
+            color: #777;
+            font-weight: normal;
+            display: block;
+            margin-top: -4px;
+            margin-bottom: 8px;
         }
         input[type="number"] { 
             width: 100%; 
@@ -200,6 +208,24 @@
             color: #d32f2f;
         }
 
+        /* 자산 입력 영역 특화 */
+        .asset-group {
+            background: #f4f8ff;
+            border: 1px solid #c8dafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .asset-title {
+            color: #0d47a1;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #c8dafc;
+            padding-bottom: 10px;
+        }
+
         .calc-btn { 
             width: 100%; 
             padding: 15px; 
@@ -228,6 +254,11 @@
             margin-bottom: 15px; 
             font-size: 16px; 
             color: #333;
+            border-bottom: 1px dashed #ffcdd2;
+            padding-bottom: 8px;
+        }
+        .result-item:last-child {
+            border-bottom: none;
         }
         .result-item span { 
             font-weight: bold; 
@@ -237,9 +268,9 @@
         .final-deficit {
             font-size: 22px; 
             font-weight: bold;
-            border-top: 2px solid #ffcdd2; 
-            padding-top: 15px; 
-            margin-top: 15px;
+            border-top: 3px solid #d32f2f !important; 
+            padding-top: 20px !important; 
+            margin-top: 10px;
             color: #d32f2f;
         }
         .final-deficit span {
@@ -249,10 +280,13 @@
             font-size: 14px; 
             color: #d32f2f; 
             font-weight: bold; 
-            margin-top: 20px; 
+            margin-top: 25px; 
             text-align: center; 
             word-break: keep-all;
             line-height: 1.4;
+            background: #fff;
+            padding: 10px;
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -291,8 +325,8 @@
 
         <!-- 자녀 입력 영역 -->
         <div id="childrenContainer">
-            <div class="child-group">
-                <div class="child-title">부양 자녀 1</div>
+            <div class="box-group">
+                <div class="box-title">부양 자녀 1</div>
                 <div class="input-group">
                     <label>현재 나이 (세)</label>
                     <input type="number" class="childAge" value="10" min="0">
@@ -335,9 +369,28 @@
             <label>일시 상환 채무 및 필수 교육비 (만 원)</label>
             <input type="number" id="lumpSum" value="5000" min="0">
         </div>
-        <div class="input-group">
-            <label>가장 유고 시 유가족에게 온전히 전달되는 '남겨진 재산' (만 원)</label>
-            <input type="number" id="currentAssets" value="3000" min="0">
+
+        <!-- 남겨질 자산 세분화 입력 영역 -->
+        <div class="asset-group">
+            <h3 class="asset-title">가장 유고 시 남겨질 현실적 자산</h3>
+            
+            <div class="input-group">
+                <label>1. 기 가입된 사망 보험금 (만 원)</label>
+                <span class="label-desc">유고 시 유가족에게 확정 지급되는 생명보험금 총액</span>
+                <input type="number" id="assetInsurance" value="0" min="0">
+            </div>
+            
+            <div class="input-group">
+                <label>2. 당장 출금 가능한 예적금/현금 (만 원)</label>
+                <span class="label-desc">상속 처리 후 유가족이 즉각 생활비로 쓸 수 있는 현금성 자산</span>
+                <input type="number" id="assetCash" value="1000" min="0">
+            </div>
+
+            <div class="input-group">
+                <label>3. 처분 가능한 부동산 및 기타 순자산 (만 원)</label>
+                <span class="label-desc">당장 현금화하기 어렵지만 처분 가능한 자산 (주택 담보대출 등은 제외한 순수 금액)</span>
+                <input type="number" id="assetRealEstate" value="0" min="0">
+            </div>
         </div>
 
         <button type="button" class="calc-btn" onclick="calculateDeficit()">생존 자금 적자액 산출</button>
@@ -345,13 +398,13 @@
         <div class="result-box" id="resultBox">
             <div class="result-item">최장 부양 기간: <span id="maxYearsLeft">0 년</span></div>
             <div class="result-item">실질 필요 월 생계비 (배우자 소득 차감): <span id="netMonthlyInfo">0 만원</span></div>
-            <div class="result-item">필요 생계비 누계: <span id="totalLiving">0 만원</span></div>
-            <div class="result-item">일시 상환 채무 및 교육비: <span id="totalLumpSum">0 만원</span></div>
-            <div class="result-item">총 필요 생존 자금: <span id="totalNeed">0 만원</span></div>
+            <div class="result-item">생계비 누계 + 일시 자금 (총 필요액): <span id="totalNeed">0 만원</span></div>
+            <div class="result-item" style="color:#0d47a1;">유가족에게 남겨질 총 자산 합계: <span id="totalAssets">0 만원</span></div>
+            
             <div class="result-item final-deficit">
                 유가족 재정 적자액: <span id="totalDeficit">0 만원</span>
             </div>
-            <p class="warning">※ 산출된 결과는 냉혹한 현실입니다. 위 금액은 현재의 준비 상태로 당신의 유가족이 고스란히 떠안아야 할 재정적 적자액입니다.</p>
+            <p class="warning">※ 산출된 결과는 냉혹한 현실입니다. 당장 현금화하기 힘든 부동산을 제외하면 체감 적자액은 이보다 훨씬 심각할 수 있습니다. 위 금액은 당신의 유가족이 빚으로 고스란히 떠안아야 할 재난입니다.</p>
         </div>
     </div>
 
@@ -372,9 +425,9 @@
             const container = document.getElementById('childrenContainer');
             
             const childDiv = document.createElement('div');
-            childDiv.className = 'child-group';
+            childDiv.className = 'box-group';
             childDiv.innerHTML = `
-                <div class="child-title">부양 자녀 ${childCount}</div>
+                <div class="box-title">부양 자녀 ${childCount}</div>
                 <button type="button" class="remove-btn" onclick="this.parentElement.remove()">삭제 ✕</button>
                 <div class="input-group">
                     <label>현재 나이 (세)</label>
@@ -388,7 +441,6 @@
             container.appendChild(childDiv);
         }
 
-        // 시각적 카드 클릭 시 금액 변경 기능
         function selectExpense(amount, element) {
             document.getElementById('monthlyExpense').value = amount;
             
@@ -399,6 +451,7 @@
         }
 
         function calculateDeficit() {
+            // 1. 부양 기간 계산
             const ageInputs = document.querySelectorAll('.childAge');
             const targetInputs = document.querySelectorAll('.targetAge');
             let maxYearsLeft = 0;
@@ -418,6 +471,7 @@
                 return;
             }
 
+            // 2. 필요 자금 계산
             const monthlyExpense = parseInt(document.getElementById('monthlyExpense').value) || 0;
             const isDual = document.querySelector('input[name="incomeType"][value="dual"]').checked;
             const spouseIncome = isDual ? (parseInt(document.getElementById('spouseIncome').value) || 0) : 0;
@@ -426,19 +480,25 @@
             if (netMonthlyExpense < 0) netMonthlyExpense = 0;
 
             const lumpSum = parseInt(document.getElementById('lumpSum').value) || 0;
-            const currentAssets = parseInt(document.getElementById('currentAssets').value) || 0;
-
             const totalLivingExpense = maxYearsLeft * 12 * netMonthlyExpense;
             const totalNeed = totalLivingExpense + lumpSum;
-            let totalDeficit = totalNeed - currentAssets;
+
+            // 3. 남겨질 자산 합계 계산
+            const assetInsurance = parseInt(document.getElementById('assetInsurance').value) || 0;
+            const assetCash = parseInt(document.getElementById('assetCash').value) || 0;
+            const assetRealEstate = parseInt(document.getElementById('assetRealEstate').value) || 0;
             
+            const totalAssets = assetInsurance + assetCash + assetRealEstate;
+
+            // 4. 최종 적자액 계산
+            let totalDeficit = totalNeed - totalAssets;
             if (totalDeficit < 0) totalDeficit = 0;
 
+            // 5. 결과 화면 출력
             document.getElementById('maxYearsLeft').innerText = maxYearsLeft + ' 년';
             document.getElementById('netMonthlyInfo').innerText = netMonthlyExpense.toLocaleString() + ' 만원';
-            document.getElementById('totalLiving').innerText = totalLivingExpense.toLocaleString() + ' 만원';
-            document.getElementById('totalLumpSum').innerText = lumpSum.toLocaleString() + ' 만원';
             document.getElementById('totalNeed').innerText = totalNeed.toLocaleString() + ' 만원';
+            document.getElementById('totalAssets').innerText = totalAssets.toLocaleString() + ' 만원';
             document.getElementById('totalDeficit').innerText = totalDeficit.toLocaleString() + ' 만원';
             
             document.getElementById('resultBox').style.display = 'block';
