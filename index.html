@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>유가족 생존 자금 진단</title>
+    <style>
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background-color: #f4f4f4; 
+            margin: 0; 
+            padding: 20px; 
+            color: #333; 
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: #fff; 
+            padding: 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+            border-top: 5px solid #d32f2f; 
+        }
+        h2 { 
+            color: #d32f2f; 
+            margin-top: 0; 
+            letter-spacing: -1px; 
+        }
+        p.desc { 
+            font-weight: bold; 
+            color: #555; 
+            margin-bottom: 30px; 
+            line-height: 1.5; 
+            word-break: keep-all;
+        }
+        .input-group { 
+            margin-bottom: 20px; 
+        }
+        label { 
+            display: block; 
+            font-weight: bold; 
+            margin-bottom: 8px; 
+            color: #111; 
+        }
+        input[type="number"] { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+        }
+        button { 
+            width: 100%; 
+            padding: 15px; 
+            background-color: #333; 
+            color: #fff; 
+            border: none; 
+            border-radius: 4px; 
+            font-size: 18px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: background 0.3s; 
+            margin-top: 10px; 
+        }
+        button:hover { 
+            background-color: #d32f2f; 
+        }
+        .result-box { 
+            margin-top: 30px; 
+            padding: 20px; 
+            background-color: #ffebee; 
+            border: 1px solid #ffcdd2; 
+            border-radius: 4px; 
+            display: none; 
+        }
+        .result-item { 
+            margin-bottom: 15px; 
+            font-size: 16px; 
+            color: #333;
+        }
+        .result-item span { 
+            font-weight: bold; 
+            float: right; 
+            color: #111; 
+        }
+        .final-deficit {
+            font-size: 22px; 
+            font-weight: bold;
+            border-top: 2px solid #ffcdd2; 
+            padding-top: 15px; 
+            margin-top: 15px;
+            color: #d32f2f;
+        }
+        .final-deficit span {
+            color: #d32f2f;
+        }
+        .warning { 
+            font-size: 14px; 
+            color: #d32f2f; 
+            font-weight: bold; 
+            margin-top: 20px; 
+            text-align: center; 
+            word-break: keep-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>유가족 생존 자금 냉혹 진단</h2>
+        <p class="desc">당신의 부재는 곧 남겨진 가족의 생존 위기입니다.<br>막연한 낙관을 버리고 현실적인 유가족 생존 자금을 직시하십시오.</p>
+
+        <div class="input-group">
+            <label>자녀의 현재 나이 (세)</label>
+            <input type="number" id="childAge" value="10" min="0">
+        </div>
+        <div class="input-group">
+            <label>자녀가 경제적으로 완전한 자립을 이루는 목표 연령 (세)</label>
+            <input type="number" id="targetAge" value="26" min="1">
+        </div>
+        <div class="input-group">
+            <label>가장 유고 시 유가족이 버텨내야 할 최소 월 생계 유지비 (만 원)</label>
+            <input type="number" id="monthlyExpense" value="300" min="0">
+        </div>
+        <div class="input-group">
+            <label>일시 상환 채무 및 필수 교육비 (만 원)</label>
+            <input type="number" id="lumpSum" value="5000" min="0">
+        </div>
+        <div class="input-group">
+            <label>현재 기 확보된 생존 방어 자산 (만 원)</label>
+            <input type="number" id="currentAssets" value="3000" min="0">
+        </div>
+
+        <button onclick="calculateDeficit()">생존 자금 적자액 산출</button>
+
+        <div class="result-box" id="resultBox">
+            <div class="result-item">필요 생계비 누계: <span id="totalLiving">0 만원</span></div>
+            <div class="result-item">일시 상환 채무 및 교육비: <span id="totalLumpSum">0 만원</span></div>
+            <div class="result-item">총 필요 생존 자금: <span id="totalNeed">0 만원</span></div>
+            <div class="result-item final-deficit">
+                유가족 재정 적자액: <span id="totalDeficit">0 만원</span>
+            </div>
+            <p class="warning">※ 산출된 결과는 냉혹한 현실입니다. 위 금액은 현재의 준비 상태로 당신의 유가족이 고스란히 떠안아야 할 재정적 적자액입니다.</p>
+        </div>
+    </div>
+
+    <script>
+        function calculateDeficit() {
+            const childAge = parseInt(document.getElementById('childAge').value) || 0;
+            const targetAge = parseInt(document.getElementById('targetAge').value) || 0;
+            const monthlyExpense = parseInt(document.getElementById('monthlyExpense').value) || 0;
+            const lumpSum = parseInt(document.getElementById('lumpSum').value) || 0;
+            const currentAssets = parseInt(document.getElementById('currentAssets').value) || 0;
+
+            const yearsLeft = targetAge - childAge;
+            
+            if (yearsLeft <= 0) {
+                alert("자립 목표 연령은 자녀의 현재 나이보다 커야 합니다.");
+                return;
+            }
+
+            const totalLivingExpense = yearsLeft * 12 * monthlyExpense;
+            const totalNeed = totalLivingExpense + lumpSum;
+            let totalDeficit = totalNeed - currentAssets;
+            
+            if (totalDeficit < 0) totalDeficit = 0;
+
+            document.getElementById('totalLiving').innerText = totalLivingExpense.toLocaleString() + ' 만원';
+            document.getElementById('totalLumpSum').innerText = lumpSum.toLocaleString() + ' 만원';
+            document.getElementById('totalNeed').innerText = totalNeed.toLocaleString() + ' 만원';
+            document.getElementById('totalDeficit').innerText = totalDeficit.toLocaleString() + ' 만원';
+            
+            document.getElementById('resultBox').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
