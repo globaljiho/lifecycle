@@ -33,8 +33,67 @@
             line-height: 1.5; 
             word-break: keep-all;
         }
+        
+        /* 자녀 입력 그룹 스타일 */
+        .child-group {
+            background: #fdfdfd;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            position: relative;
+        }
+        .child-title {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #d32f2f;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            font-weight: bold;
+        }
+        .remove-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0;
+            width: auto;
+            margin: 0;
+        }
+        .remove-btn:hover {
+            color: #d32f2f;
+            background: none;
+        }
+
+        /* 자녀 추가 배너 스타일 */
+        .add-banner {
+            width: 100%;
+            padding: 12px;
+            background-color: #fff;
+            color: #333;
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 25px;
+        }
+        .add-banner:hover {
+            border-color: #333;
+            background-color: #f9f9f9;
+        }
+
         .input-group { 
-            margin-bottom: 20px; 
+            margin-bottom: 15px; 
+        }
+        .input-group:last-child {
+            margin-bottom: 0;
         }
         label { 
             display: block; 
@@ -50,10 +109,10 @@
             box-sizing: border-box; 
             font-size: 16px; 
         }
-        button { 
+        .calc-btn { 
             width: 100%; 
             padding: 15px; 
-            background-color: #333; 
+            background-color: #111; 
             color: #fff; 
             border: none; 
             border-radius: 4px; 
@@ -63,7 +122,7 @@
             transition: background 0.3s; 
             margin-top: 10px; 
         }
-        button:hover { 
+        .calc-btn:hover { 
             background-color: #d32f2f; 
         }
         .result-box { 
@@ -102,6 +161,7 @@
             margin-top: 20px; 
             text-align: center; 
             word-break: keep-all;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -110,14 +170,24 @@
         <h2>유가족 생존 자금 냉혹 진단</h2>
         <p class="desc">당신의 부재는 곧 남겨진 가족의 생존 위기입니다.<br>막연한 낙관을 버리고 현실적인 유가족 생존 자금을 직시하십시오.</p>
 
-        <div class="input-group">
-            <label>자녀의 현재 나이 (세)</label>
-            <input type="number" id="childAge" value="10" min="0">
+        <!-- 자녀 입력 영역 -->
+        <div id="childrenContainer">
+            <div class="child-group">
+                <div class="child-title">부양 자녀 1</div>
+                <div class="input-group">
+                    <label>현재 나이 (세)</label>
+                    <input type="number" class="childAge" value="10" min="0">
+                </div>
+                <div class="input-group">
+                    <label>경제적 완전 자립 목표 연령 (세)</label>
+                    <input type="number" class="targetAge" value="26" min="1">
+                </div>
+            </div>
         </div>
-        <div class="input-group">
-            <label>자녀가 경제적으로 완전한 자립을 이루는 목표 연령 (세)</label>
-            <input type="number" id="targetAge" value="26" min="1">
-        </div>
+
+        <!-- 자녀 추가 배너 버튼 -->
+        <button type="button" class="add-banner" onclick="addChild()">+ 부양해야 할 자녀 추가</button>
+
         <div class="input-group">
             <label>가장 유고 시 유가족이 버텨내야 할 최소 월 생계 유지비 (만 원)</label>
             <input type="number" id="monthlyExpense" value="300" min="0">
@@ -131,9 +201,10 @@
             <input type="number" id="currentAssets" value="3000" min="0">
         </div>
 
-        <button onclick="calculateDeficit()">생존 자금 적자액 산출</button>
+        <button type="button" class="calc-btn" onclick="calculateDeficit()">생존 자금 적자액 산출</button>
 
         <div class="result-box" id="resultBox">
+            <div class="result-item">최장 부양 기간: <span id="maxYearsLeft">0 년</span></div>
             <div class="result-item">필요 생계비 누계: <span id="totalLiving">0 만원</span></div>
             <div class="result-item">일시 상환 채무 및 교육비: <span id="totalLumpSum">0 만원</span></div>
             <div class="result-item">총 필요 생존 자금: <span id="totalNeed">0 만원</span></div>
@@ -145,26 +216,61 @@
     </div>
 
     <script>
-        function calculateDeficit() {
-            const childAge = parseInt(document.getElementById('childAge').value) || 0;
-            const targetAge = parseInt(document.getElementById('targetAge').value) || 0;
-            const monthlyExpense = parseInt(document.getElementById('monthlyExpense').value) || 0;
-            const lumpSum = parseInt(document.getElementById('lumpSum').value) || 0;
-            const currentAssets = parseInt(document.getElementById('currentAssets').value) || 0;
+        let childCount = 1;
 
-            const yearsLeft = targetAge - childAge;
+        function addChild() {
+            childCount++;
+            const container = document.getElementById('childrenContainer');
             
-            if (yearsLeft <= 0) {
+            const childDiv = document.createElement('div');
+            childDiv.className = 'child-group';
+            childDiv.innerHTML = `
+                <div class="child-title">부양 자녀 ${childCount}</div>
+                <button type="button" class="remove-btn" onclick="this.parentElement.remove()">삭제 ✕</button>
+                <div class="input-group">
+                    <label>현재 나이 (세)</label>
+                    <input type="number" class="childAge" value="5" min="0">
+                </div>
+                <div class="input-group">
+                    <label>경제적 완전 자립 목표 연령 (세)</label>
+                    <input type="number" class="targetAge" value="26" min="1">
+                </div>
+            `;
+            container.appendChild(childDiv);
+        }
+
+        function calculateDeficit() {
+            const ageInputs = document.querySelectorAll('.childAge');
+            const targetInputs = document.querySelectorAll('.targetAge');
+            let maxYearsLeft = 0;
+
+            // 여러 자녀 중 가장 긴 부양 기간(자립 연령 - 현재 나이)을 계산
+            for (let i = 0; i < ageInputs.length; i++) {
+                const age = parseInt(ageInputs[i].value) || 0;
+                const target = parseInt(targetInputs[i].value) || 0;
+                const years = target - age;
+                
+                if (years > maxYearsLeft) {
+                    maxYearsLeft = years;
+                }
+            }
+
+            if (maxYearsLeft <= 0) {
                 alert("자립 목표 연령은 자녀의 현재 나이보다 커야 합니다.");
                 return;
             }
 
-            const totalLivingExpense = yearsLeft * 12 * monthlyExpense;
+            const monthlyExpense = parseInt(document.getElementById('monthlyExpense').value) || 0;
+            const lumpSum = parseInt(document.getElementById('lumpSum').value) || 0;
+            const currentAssets = parseInt(document.getElementById('currentAssets').value) || 0;
+
+            const totalLivingExpense = maxYearsLeft * 12 * monthlyExpense;
             const totalNeed = totalLivingExpense + lumpSum;
             let totalDeficit = totalNeed - currentAssets;
             
             if (totalDeficit < 0) totalDeficit = 0;
 
+            document.getElementById('maxYearsLeft').innerText = maxYearsLeft + ' 년';
             document.getElementById('totalLiving').innerText = totalLivingExpense.toLocaleString() + ' 만원';
             document.getElementById('totalLumpSum').innerText = lumpSum.toLocaleString() + ' 만원';
             document.getElementById('totalNeed').innerText = totalNeed.toLocaleString() + ' 만원';
